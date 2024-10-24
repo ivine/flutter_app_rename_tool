@@ -63,19 +63,7 @@ class FARPlatformAndroid {
             isKotlin = true;
           }
         }
-        if (isKotlin) {
-          processAndroidCodeFileDirectory(
-            currentDirPath: currentDirPath,
-            language: 'kotlin',
-            newPackage: package,
-          );
-        } else {
-          processAndroidCodeFileDirectory(
-            currentDirPath: currentDirPath,
-            language: 'java',
-            newPackage: package,
-          );
-        }
+        await processAndroidCodeFileDirectory(currentDirPath: currentDirPath, language: isKotlin ? 'kotlin' : 'java', newPackage: package);
         log(text: "FARPlatformAndroid: process rename bundle id dir --- code dirs and files completed!");
       } else {
         log(text: "FARPlatformAndroid: process rename bundle id dir --- no need to rename dir, new package name: $package");
@@ -100,11 +88,11 @@ class FARPlatformAndroid {
     print('processBuildGradleAppName completed');
   }
 
-  void processAndroidCodeFileDirectory({
+  Future<void> processAndroidCodeFileDirectory({
     required String currentDirPath,
     required String language,
     required String newPackage,
-  }) {
+  }) async {
     if (newPackage.isEmpty) {
       print('processAndroidCodeFileDirectory, newPackage: $newPackage is empty');
       return;
@@ -118,10 +106,9 @@ class FARPlatformAndroid {
       mainActivityFileName = 'MainActivity.kt';
     }
     for (var element in androidMainAllFile) {
-      if (!element.path.endsWith(mainActivityFileName)) {
-        continue;
+      if (element.path.endsWith(mainActivityFileName)) {
+        mainActivityFilePath = element.path;
       }
-      mainActivityFilePath = element.path;
     }
     if (mainActivityFilePath.isEmpty) {
       print('not found MainActivity file path');
@@ -131,6 +118,20 @@ class FARPlatformAndroid {
     String originalPackagePathString = mainActivityFilePath.replaceAll(androidDir.path, '').replaceAll('/$mainActivityFileName', '');
     String newPakcagePathString = newPackage.split('.').join('/');
     String commonPathString = findCommonPath(originalPackagePathString, newPakcagePathString);
+
+    String originalPackageName = originalPackagePathString.split('/').join('.');
+    for (var element in androidMainAllFile) {
+      // 修改引入头
+      final fileType = await FileUtil.getFilePathEntityType(element.path);
+      if (fileType == FileSystemEntityType.file) {
+        final tmpFile = File(element.path);
+        String tmpFileContent = tmpFile.readAsStringSync();
+        if (tmpFileContent.contains(originalPackageName)) {
+          tmpFileContent = tmpFileContent.replaceAll("package $originalPackageName", 'package $newPackage');
+          tmpFile.writeAsStringSync(tmpFileContent);
+        }
+      }
+    }
 
     final mainActivityFile = File(mainActivityFilePath);
     final mainActivityParentDir = mainActivityFile.parent;
