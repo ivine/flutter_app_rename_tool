@@ -1,5 +1,5 @@
 import 'package:args/args.dart';
-import 'package:flutter_app_rename/flutter_app_rename.dart';
+import 'package:flutter_app_rename_tool/flutter_app_rename_tool.dart';
 
 void main(List<String> arguments) {
   var parser = ArgParser();

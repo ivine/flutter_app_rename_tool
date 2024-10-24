@@ -70,7 +70,7 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
-  flutter_app_rename:
+  flutter_app_rename_tool:
     dependency: "direct dev"
     description:
       path: ".."

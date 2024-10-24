@@ -3,7 +3,7 @@ in `lib/`, and example unit test in `test/`.
 
 ```
 
-flutter_app_rename:
+flutter_app_rename_tool:
   flutter:
     app_name: far_altman_flutter
 
@@ -20,7 +20,7 @@ flutter_app_rename:
 
 ------
 
-flutter_app_rename:
+flutter_app_rename_tool:
   flutter:
     app_name: far_altman_flutter
 

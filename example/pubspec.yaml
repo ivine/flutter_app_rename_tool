@@ -1,4 +1,4 @@
-name: far_altman_flutter
+name: example
 description: "A new Flutter project."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
@@ -47,7 +47,7 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^3.0.0
 
-  flutter_app_rename:
+  flutter_app_rename_tool:
     path: ../
 
 # For information on the generic Dart part of this file, see the
@@ -92,7 +92,7 @@ flutter:
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
 
-flutter_app_rename:
+flutter_app_rename_tool:
   flutter:
     app_name: far_altman_flutter
 
