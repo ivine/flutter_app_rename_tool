@@ -26,79 +26,154 @@ class FARPlatformAndroid {
       log(text: "FARPlatformAndroid: App name is empty.");
       return;
     }
-    final stringsXmlFile = File(
-      '$currentDirPath/android/app/src/main/res/values/strings.xml',
-    );
+    // final stringsXmlFile = File(
+    //   '$currentDirPath/android/app/src/main/res/values/strings.xml',
+    // );
 
-    if (!stringsXmlFile.existsSync()) {
-      log(text: "FARPlatformAndroid: strings.xml does not exist at ${stringsXmlFile.path}");
-      return;
-    }
-
-    // settings
-    String originalPackage = '';
+    // if (!stringsXmlFile.existsSync()) {
+    //   log(text: "FARPlatformAndroid: strings.xml does not exist at ${stringsXmlFile.path}");
+    //   return;
+    // }
 
     // AndroidManifest.xml
     try {
       final manifest = FARPlatformAndroidManifest(currentDirPath, newName, package);
-      originalPackage = manifest.originalPackage;
       await manifest.update();
       log(text: "FARPlatformAndroid: AndroidManifest.xml name updated!");
     } catch (e) {
       log(text: "FARPlatformAndroid: Failed to update app_name, e: $e");
     }
 
-    if (package is String && package.isNotEmpty && originalPackage != package) {
-      log(text: "FARPlatformAndroid: start process --- android/app/src/main/kotlin(java)/package --- code dirs and files...");
-      processAndroidCodeFileDirectory(
-        currentDirPath: currentDirPath,
-        language: 'java',
-        originalPackage: originalPackage,
-        newPackage: package,
-      );
-      processAndroidCodeFileDirectory(
-        currentDirPath: currentDirPath,
-        language: 'kotlin',
-        originalPackage: originalPackage,
-        newPackage: package,
-      );
-      log(text: "FARPlatformAndroid: process --- android/app/src/main/kotlin(java)/package --- code dirs and files completed!");
+    try {
+      processBuildGradleBundleId(bundleId: package);
+    } catch (e) {
+      log(text: "FARPlatformAndroid: Failed to update app/build.gradle bundleId, e: $e");
     }
 
+    try {
+      if (package is String && package.isNotEmpty) {
+        log(text: "FARPlatformAndroid: start process rename bundle id dir --- code dirs and files...");
+        final buildGradleFile = File("$currentDirPath/android/app/build.gradle");
+        bool isKotlin = false;
+        if (buildGradleFile.existsSync()) {
+          final buildGradleFileString = buildGradleFile.readAsStringSync();
+          if (buildGradleFileString.contains("\"kotlin-android\"") &&
+              buildGradleFileString.contains('kotlinOptions') &&
+              buildGradleFileString.contains('src/main/kotlin')) {
+            isKotlin = true;
+          }
+        }
+        if (isKotlin) {
+          processAndroidCodeFileDirectory(
+            currentDirPath: currentDirPath,
+            language: 'kotlin',
+            newPackage: package,
+          );
+        } else {
+          processAndroidCodeFileDirectory(
+            currentDirPath: currentDirPath,
+            language: 'java',
+            newPackage: package,
+          );
+        }
+        log(text: "FARPlatformAndroid: process rename bundle id dir --- code dirs and files completed!");
+      } else {
+        log(text: "FARPlatformAndroid: process rename bundle id dir --- no need to rename dir, new package name: $package");
+      }
+    } catch (e) {
+      log(text: "FARPlatformAndroid: process rename bundle id dir --- error:$e");
+    }
     log(text: "FARPlatformAndroid: app name update completed. ✅");
+  }
+
+  void processBuildGradleBundleId({required String bundleId}) {
+    final buildGradleFile = File("$currentDirPath/android/app/build.gradle");
+    if (!buildGradleFile.existsSync()) {
+      print("build.gradle is not exist, path: ${buildGradleFile.path}");
+      return;
+    }
+    final buildGradleString = buildGradleFile.readAsStringSync();
+    final newPackageIDBuildGradleString = buildGradleString
+        .replaceAll(RegExp('applicationId\\s*=?\\s*["\'].*?["\']'), 'applicationId "$bundleId"')
+        .replaceAll(RegExp('namespace\\s*=?\\s*["\'].*?["\']'), 'namespace "$bundleId"');
+    buildGradleFile.writeAsStringSync(newPackageIDBuildGradleString);
+    print('processBuildGradleAppName completed');
   }
 
   void processAndroidCodeFileDirectory({
     required String currentDirPath,
     required String language,
-    required String originalPackage,
     required String newPackage,
   }) {
-    final dirPath = '$currentDirPath/android/app/src/main/$language/${originalPackage.split('.').join('/')}';
-    final originalDir = Directory(dirPath);
+    if (newPackage.isEmpty) {
+      print('processAndroidCodeFileDirectory, newPackage: $newPackage is empty');
+      return;
+    }
 
-    if (originalDir.existsSync()) {
-      final newDirPath = '$currentDirPath/android/app/src/main/$language/${newPackage.split('.').join('/')}';
+    final androidDir = Directory('$currentDirPath/android/app/src/main/$language/');
+    final androidMainAllFile = androidDir.listSync(recursive: true);
+    String mainActivityFilePath = '';
+    String mainActivityFileName = 'MainActivity.java';
+    if (language == 'kotlin') {
+      mainActivityFileName = 'MainActivity.kt';
+    }
+    for (var element in androidMainAllFile) {
+      if (!element.path.endsWith(mainActivityFileName)) {
+        continue;
+      }
+      mainActivityFilePath = element.path;
+    }
+    if (mainActivityFilePath.isEmpty) {
+      print('not found MainActivity file path');
+      return;
+    }
+
+    String originalPackagePathString = mainActivityFilePath.replaceAll(androidDir.path, '').replaceAll('/$mainActivityFileName', '');
+    String newPakcagePathString = newPackage.split('.').join('/');
+    String commonPathString = findCommonPath(originalPackagePathString, newPakcagePathString);
+
+    final mainActivityFile = File(mainActivityFilePath);
+    final mainActivityParentDir = mainActivityFile.parent;
+    if (mainActivityParentDir.existsSync()) {
+      final newDirPath = '${androidDir.path}/$newPakcagePathString';
       final newDir = Directory(newDirPath);
-
       if (!newDir.existsSync()) {
         newDir.createSync(recursive: true);
       }
-
-      FileUtil.copyDirectory(originalDir, newDir);
-      List<String> allFilePaths = FileUtil.listFilesByExtensions(newDir.path, ['*']);
-
-      for (String fp in allFilePaths) {
-        File f = File(fp);
-        if (f.existsSync()) {
-          String fString = f.readAsStringSync();
-          fString = fString.replaceAll("package $originalPackage", "package $newPackage");
-          f.writeAsStringSync(fString, flush: true);
-        }
-      }
-
-      originalDir.deleteSync(recursive: true);
+      mainActivityParentDir.renameSync(newDirPath);
     }
+
+    String previousDirName = originalPackagePathString.split('/').where((e) => !commonPathString.contains(e)).toList().firstOrNull ?? '';
+    String tmpOriginalDirPath = '/${androidDir.path.split('/').where((element) => element.isNotEmpty).toList().join('/')}';
+    if (commonPathString.isNotEmpty) {
+      tmpOriginalDirPath += '/$commonPathString';
+    }
+    if (previousDirName.isNotEmpty) {
+      tmpOriginalDirPath += '/$previousDirName';
+    }
+    final originalDir = Directory(tmpOriginalDirPath);
+
+    if (originalDir.existsSync()) {
+      originalDir.deleteSync(recursive: true);
+    } else {
+      print('originalDir.path --> ${originalDir.path} is not exist');
+    }
+  }
+
+// 查找两个字符串的公共路径
+  String findCommonPath(String str1, String str2) {
+    List<String> parts1 = str1.split('/');
+    List<String> parts2 = str2.split('/');
+    List<String> commonParts = [];
+    int minLength = parts1.length < parts2.length ? parts1.length : parts2.length;
+    for (int i = 0; i < minLength; i++) {
+      if (parts1[i] == parts2[i]) {
+        commonParts.add(parts1[i]);
+      } else {
+        break;
+      }
+    }
+    return commonParts.join('/');
   }
 }
 
@@ -111,36 +186,12 @@ class FARPlatformAndroidManifest {
     debugAndroidManifestFile = File('$dirPath/android/app/src/debug/AndroidManifest.xml');
     profileAndroidManifestFile = File('$dirPath/android/app/src/profile/AndroidManifest.xml');
     valuesDir = Directory('$dirPath/android/app/src/main/res/values');
-
-    originalPackage = getOriginalPackage();
   }
 
   late File mainAndroidManifestFile;
   late File debugAndroidManifestFile;
   late File profileAndroidManifestFile;
   late Directory valuesDir;
-  late String originalPackage;
-
-  //
-  String getOriginalPackage() {
-    String package = '';
-    if (mainAndroidManifestFile.existsSync()) {
-      final doc = XmlDocument.parse(mainAndroidManifestFile.readAsStringSync());
-      final elements = doc.findAllElements('manifest').toList();
-      if (elements.isNotEmpty) {
-        XmlElement app = elements.first;
-        String tmpPakcage = app.getAttribute("package") ?? '';
-        if (tmpPakcage.startsWith('@')) {
-          final list = tmpPakcage.split("/");
-          final targetKey = list.last;
-          package = getValuesDirFileStringValue(attributeName: 'name', targetKey: targetKey);
-        } else {
-          package = tmpPakcage;
-        }
-      }
-    }
-    return package;
-  }
 
   /// 修改 AndroidManifest.xml 中的 android:label
   Future<void> update() async {
@@ -187,7 +238,7 @@ class FARPlatformAndroidManifest {
   }
 
   XmlDocument updateManifestPackage(XmlDocument doc) {
-    if (newPackage.isEmpty || newPackage == originalPackage) {
+    if (newPackage.isEmpty) {
       return doc;
     }
     final elements = doc.findAllElements('manifest').toList();

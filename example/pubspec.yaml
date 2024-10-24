@@ -95,11 +95,9 @@ flutter:
 flutter_app_rename_tool:
   flutter:
     app_name: far_altman_flutter
-
   ios:
     app_name: FARAltmanIOS
     bundle_identifier: com.example.app_debug
-
   android:
     app_name: FARAltmanAndroid
-    package: com.example.android
+    package: com.far.android

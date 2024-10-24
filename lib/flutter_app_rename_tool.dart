@@ -24,7 +24,7 @@ class FlutterAppRename {
     await setupConfigs();
 
     if (settings == null) {
-      LogUtil.instance.addLog(text: "flutter_app_rename settings is null");
+      LogUtil.instance.addLog(text: "flutter_app_rename_tool settings is null");
       return;
     }
 
@@ -45,8 +45,8 @@ class FlutterAppRename {
     }
 
     if (pubspecContent is YamlMap) {
-      if (pubspecContent.containsKey('flutter_app_rename')) {
-        settings = pubspecContent['flutter_app_rename'];
+      if (pubspecContent.containsKey('flutter_app_rename_tool')) {
+        settings = pubspecContent['flutter_app_rename_tool'];
       } else {
         LogUtil.instance.addLog(text: "setupConfigs, pubspec content is not YamlMap");
       }

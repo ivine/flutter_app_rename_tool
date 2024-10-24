@@ -11,14 +11,11 @@ class FileUtil {
       destination.deleteSync(recursive: true);
     }
     destination.createSync(recursive: true);
-
     source.listSync(recursive: false).forEach((FileSystemEntity entity) {
-      String newPath = p.join(destination.path, p.basename(entity.path));
       if (entity is File) {
-        entity.copySync(newPath);
+        entity.copySync('${destination.path}/${entity.uri.pathSegments.last}');
       } else if (entity is Directory) {
-        Directory newDirectory = Directory(newPath);
-        copyDirectory(entity, newDirectory);
+        copyDirectory(entity, Directory('${destination.path}/${entity.uri.pathSegments.last}'));
       }
     });
   }
