@@ -117,6 +117,10 @@ class FARPlatformAndroid {
 
     String originalPackagePathString = mainActivityFilePath.replaceAll(androidDir.path, '').replaceAll('/$mainActivityFileName', '');
     String newPakcagePathString = newPackage.split('.').join('/');
+    if (originalPackagePathString == newPakcagePathString) {
+      print('originalPackagePathString: $originalPackagePathString == newPakcagePathString: $newPakcagePathString');
+      return;
+    }
     String commonPathString = findCommonPath(originalPackagePathString, newPakcagePathString);
 
     String originalPackageName = originalPackagePathString.split('/').join('.');
