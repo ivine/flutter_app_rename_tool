@@ -140,7 +140,7 @@ class FARPlatformAndroid {
     final mainActivityFile = File(mainActivityFilePath);
     final mainActivityParentDir = mainActivityFile.parent;
     if (mainActivityParentDir.existsSync()) {
-      final newDirPath = '${androidDir.path}/$newPakcagePathString';
+      final newDirPath = '${androidDir.path}$newPakcagePathString';
       final newDir = Directory(newDirPath);
       if (!newDir.existsSync()) {
         newDir.createSync(recursive: true);
