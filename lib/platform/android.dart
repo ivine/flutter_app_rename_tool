@@ -149,7 +149,7 @@ class FARPlatformAndroid {
     }
 
     String previousDirName = originalPackagePathString.split('/').where((e) => !commonPathString.contains(e)).toList().firstOrNull ?? '';
-    String tmpOriginalDirPath = '/${androidDir.path.split('/').where((element) => element.isNotEmpty).toList().join('/')}';
+    String tmpOriginalDirPath = androidDir.path.split('/').where((element) => element.isNotEmpty).toList().join('/');
     if (commonPathString.isNotEmpty) {
       tmpOriginalDirPath += '/$commonPathString';
     }
