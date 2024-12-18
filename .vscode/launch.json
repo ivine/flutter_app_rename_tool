@@ -15,7 +15,7 @@
       "type": "dart",
       "args": [
         "-p",
-        "/Users/a2/Gitea/ivine/flutter_app_rename_tool/example"
+        "./example"
         // "example"
       ]
     },
