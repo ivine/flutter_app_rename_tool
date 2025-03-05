@@ -53,17 +53,7 @@ class FARPlatformAndroid {
     try {
       if (package is String && package.isNotEmpty) {
         log(text: "FARPlatformAndroid: start process rename bundle id dir --- code dirs and files...");
-        final buildGradleFile = File("$currentDirPath/android/app/build.gradle");
-        bool isKotlin = false;
-        if (buildGradleFile.existsSync()) {
-          final buildGradleFileString = buildGradleFile.readAsStringSync();
-          if (buildGradleFileString.contains("\"kotlin-android\"") &&
-              buildGradleFileString.contains('kotlinOptions') &&
-              buildGradleFileString.contains('src/main/kotlin')) {
-            isKotlin = true;
-          }
-        }
-        await processAndroidCodeFileDirectory(currentDirPath: currentDirPath, language: isKotlin ? 'kotlin' : 'java', newPackage: package);
+        await processAndroidCodeFileDirectory(currentDirPath: currentDirPath, newPackage: package);
         log(text: "FARPlatformAndroid: process rename bundle id dir --- code dirs and files completed!");
       } else {
         log(text: "FARPlatformAndroid: process rename bundle id dir --- no need to rename dir, new package name: $package");
@@ -90,7 +80,6 @@ class FARPlatformAndroid {
 
   Future<void> processAndroidCodeFileDirectory({
     required String currentDirPath,
-    required String language,
     required String newPackage,
   }) async {
     if (newPackage.isEmpty) {
@@ -98,37 +87,49 @@ class FARPlatformAndroid {
       return;
     }
 
-    final androidDir = Directory('$currentDirPath/android/app/src/main/$language/');
-    final androidMainAllFile = androidDir.listSync(recursive: true);
+    final androidDir = Directory('$currentDirPath/android/app/src/main/');
+    final androidMainAllFile = listAllFiles(androidDir)
+        .where((element) => !element.contains('android/app/src/main/res/') && (element.endsWith('.java') || element.endsWith('.kt')))
+        .toList();
     String mainActivityFilePath = '';
-    String mainActivityFileName = 'MainActivity.java';
-    if (language == 'kotlin') {
-      mainActivityFileName = 'MainActivity.kt';
-    }
-    for (var element in androidMainAllFile) {
-      if (element.path.endsWith(mainActivityFileName)) {
-        mainActivityFilePath = element.path;
+    String mainActivityFileName = 'MainActivity';
+    String language = 'java';
+    for (String element in androidMainAllFile) {
+      String tmpFileName = p.basename(element);
+      if (tmpFileName.startsWith(mainActivityFileName)) {
+        mainActivityFilePath = element;
+        if (tmpFileName.endsWith("$mainActivityFileName.kt")) {
+          language = 'kotlin';
+        }
+        break;
       }
     }
+
+    if (language == 'java') {
+      mainActivityFileName += '.java';
+    } else if (language == 'kotlin') {
+      mainActivityFileName += '.kt';
+    }
+
     if (mainActivityFilePath.isEmpty) {
       print('not found MainActivity file path');
       return;
     }
 
-    String originalPackagePathString = mainActivityFilePath.replaceAll(androidDir.path, '').replaceAll('/$mainActivityFileName', '');
+    String originalPackagePathString =
+        mainActivityFilePath.replaceAll('${androidDir.path}$language/', '').replaceAll('/$mainActivityFileName', '');
     String newPakcagePathString = newPackage.split('.').join('/');
     if (originalPackagePathString == newPakcagePathString) {
       print('originalPackagePathString: $originalPackagePathString == newPakcagePathString: $newPakcagePathString');
       return;
     }
-    String commonPathString = findCommonPath(originalPackagePathString, newPakcagePathString);
 
+    // 修改引入头
     String originalPackageName = originalPackagePathString.split('/').join('.');
     for (var element in androidMainAllFile) {
-      // 修改引入头
-      final fileType = await FileUtil.getFilePathEntityType(element.path);
+      final fileType = await FileUtil.getFilePathEntityType(element);
       if (fileType == FileSystemEntityType.file) {
-        final tmpFile = File(element.path);
+        final tmpFile = File(element);
         String tmpFileContent = tmpFile.readAsStringSync();
         if (tmpFileContent.contains(originalPackageName)) {
           tmpFileContent = tmpFileContent.replaceAll("package $originalPackageName", 'package $newPackage');
@@ -140,7 +141,7 @@ class FARPlatformAndroid {
     final mainActivityFile = File(mainActivityFilePath);
     final mainActivityParentDir = mainActivityFile.parent;
     if (mainActivityParentDir.existsSync()) {
-      final newDirPath = '${androidDir.path}$newPakcagePathString';
+      final newDirPath = '${androidDir.path}$language/$newPakcagePathString';
       final newDir = Directory(newDirPath);
       if (!newDir.existsSync()) {
         newDir.createSync(recursive: true);
@@ -148,20 +149,11 @@ class FARPlatformAndroid {
       mainActivityParentDir.renameSync(newDirPath);
     }
 
-    String previousDirName = originalPackagePathString.split('/').where((e) => !commonPathString.contains(e)).toList().firstOrNull ?? '';
-    String tmpOriginalDirPath = androidDir.path.split('/').where((element) => element.isNotEmpty).toList().join('/');
-    if (commonPathString.isNotEmpty) {
-      tmpOriginalDirPath += '/$commonPathString';
-    }
-    if (previousDirName.isNotEmpty) {
-      tmpOriginalDirPath += '/$previousDirName';
-    }
-    final originalDir = Directory(tmpOriginalDirPath);
-
-    if (originalDir.existsSync()) {
-      originalDir.deleteSync(recursive: true);
+    final needToDeleteDir = mainActivityParentDir.parent;
+    if (needToDeleteDir.existsSync()) {
+      needToDeleteDir.deleteSync();
     } else {
-      print('originalDir.path --> ${originalDir.path} is not exist');
+      print('needToDeleteDir.path --> ${needToDeleteDir.path} is not exist');
     }
   }
 
@@ -179,6 +171,25 @@ class FARPlatformAndroid {
       }
     }
     return commonParts.join('/');
+  }
+
+  List<String> listAllFiles(Directory dir) {
+    final List<String> filePaths = [];
+
+    try {
+      final List<FileSystemEntity> entities = dir.listSync(recursive: false, followLinks: false);
+      for (var entity in entities) {
+        if (entity is File) {
+          filePaths.add(entity.path);
+        } else if (entity is Directory) {
+          // 递归调用
+          filePaths.addAll(listAllFiles(entity));
+        }
+      }
+    } catch (e) {
+      print('Error listing files in ${dir.path}: $e');
+    }
+    return filePaths;
   }
 }
 
