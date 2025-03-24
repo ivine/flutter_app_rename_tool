@@ -14,7 +14,7 @@ class FARPlatformFlutter {
   Future<void> run({required String dirPath, required YamlMap settings}) async {
     currentDirPath = dirPath;
     if (!settings.containsKey('flutter')) {
-      log("Flutter settings does not contain 'flutter' key.");
+      log("Flutter settings does not contain 'flutter' key, skipping...");
       return;
     }
 
@@ -42,10 +42,10 @@ class FARPlatformFlutter {
     ];
 
     // 替换 Dart 文件中的包名
-    await _replaceInDirectories(['$currentDirPath/lib', '$currentDirPath/test'], patterns, originalName, name);
+    await _update_packageNameInDirectories(['$currentDirPath/lib', '$currentDirPath/test'], patterns, originalName, name);
 
     // 更新 `pubspec.yaml` 中的名称
-    await _updatePubspecName(pubspecFile, name);
+    await _update_pubspecName(pubspecFile, name);
 
     log("Flutter app name update completed. ✅");
   }
@@ -60,7 +60,8 @@ class FARPlatformFlutter {
     return yaml['name'] ?? '';
   }
 
-  Future<void> _replaceInDirectories(List<String> directories, List<String> patterns, String originalName, String newName) async {
+  Future<void> _update_packageNameInDirectories(
+      List<String> directories, List<String> patterns, String originalName, String newName) async {
     for (final dirPath in directories) {
       final directory = Directory(dirPath);
       if (!directory.existsSync()) {
@@ -73,14 +74,14 @@ class FARPlatformFlutter {
 
       for (final filePath in dartFiles) {
         final file = File(filePath);
-        if (await _replaceInFile(file, patterns, originalName, newName)) {
+        if (await _update_packageNameInFile(file, patterns, originalName, newName)) {
           log("Flutter Updated: $filePath");
         }
       }
     }
   }
 
-  Future<bool> _replaceInFile(File file, List<String> patterns, String originalName, String newName) async {
+  Future<bool> _update_packageNameInFile(File file, List<String> patterns, String originalName, String newName) async {
     if (!file.existsSync()) return false;
     String content = await file.readAsString();
     bool isNeedToUpdate = content.contains(originalName);
@@ -100,7 +101,7 @@ class FARPlatformFlutter {
     return isNeedToUpdate;
   }
 
-  Future<void> _updatePubspecName(File pubspecFile, String newName) async {
+  Future<void> _update_pubspecName(File pubspecFile, String newName) async {
     if (!pubspecFile.existsSync()) {
       log("Flutter pubspec.yaml does not exist.");
       return;

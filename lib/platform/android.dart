@@ -15,13 +15,13 @@ class FARPlatformAndroid {
   Future<void> run({required String dirPath, required YamlMap settings}) async {
     currentDirPath = dirPath;
     if (!settings.containsKey('android')) {
-      log("Android settings does not contain 'android' key.");
+      log("Android settings does not contain 'android' key, skipping...");
       return;
     }
 
     final androidSettings = settings['android'] as YamlMap;
     final newName = androidSettings[keyAppName] ?? '';
-    final package = androidSettings['package'] ?? '';
+    final package = androidSettings[keyAndroidPackgeID] ?? '';
     if (newName.isEmpty) {
       log("Android app name is empty.");
       return;

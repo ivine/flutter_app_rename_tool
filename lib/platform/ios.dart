@@ -6,14 +6,15 @@ import 'package:yaml/yaml.dart';
 import 'package:xcode_parser1/xcode_parser1.dart';
 
 import '../const/const.dart';
+import '../const/settings.dart';
 import '../util/log_util.dart';
+import '../util/darwin_util.dart';
 
 class FARPlatformIOS {
-  String newAppName = '';
-  String newAppShortName = '';
-  String bundleID_debug = '';
-  String bundleID_profile = '';
-  String bundleID_release = '';
+  String bundleDisplayName = '';
+  String bundleName = '';
+
+  List<DarwinBundleIDSettings> bundleIdSettings = [];
 
   late String currentDirPath;
 
@@ -21,50 +22,58 @@ class FARPlatformIOS {
   Future<void> run({required String dirPath, required YamlMap settings}) async {
     currentDirPath = dirPath;
     if (!settings.containsKey('ios')) {
-      log("iOS settings does not contain 'flutter' key.");
+      log("iOS settings does not contain 'ios' key, skipping...");
       return;
     }
 
     final iosSettings = settings['ios'] as YamlMap;
-    newAppName = iosSettings[keyAppName] ?? '';
-    if (newAppName.isEmpty) {
-      log("iOS app name is empty.");
+    bundleDisplayName = iosSettings[keyAppName] ?? '';
+    if (bundleDisplayName.isEmpty) {
+      log("iOS app name(CFBundleDisplayName) is empty.");
       return;
     }
 
-    newAppShortName = iosSettings[keyAppShortName] ?? '';
-    if (newAppShortName.isEmpty) {
-      newAppShortName = newAppName;
-      if (newAppShortName.length > 15) {
-        log(
-          "iOS app short name can contain up to 15 characters, https://developer.apple.com/documentation/bundleresources/information_property_list/cfbundlename#discussion",
-        );
-        newAppShortName = '';
-      }
+    bundleName = iosSettings[keyDarwinBundleName] ?? '';
+    if (bundleName.isEmpty) {
+      bundleName = bundleDisplayName;
+      log(
+        "iOS app short name(CFBundleName) is empty",
+      );
+    }
+    if (bundleName.length > 15) {
+      log(
+        "iOS app short name(CFBundleName) can contain up to 15 characters, https://developer.apple.com/documentation/bundleresources/information_property_list/cfbundlename#discussion",
+      );
+      bundleName = '';
     }
 
     // 更新 Info.plist 文件内容
-    _updatePlistFileName();
+    _update_plistFileName();
 
-    dynamic bundleId = iosSettings[keyBundleIdentifier] ?? '';
+    // get bundle id
+    dynamic bundleId = iosSettings[keyDarwinBundleId] ?? '';
     if (bundleId is YamlMap) {
-      bundleID_debug = bundleId['debug'];
-      bundleID_profile = bundleId['profile'];
-      bundleID_release = bundleId['release'];
+      bundleIdSettings = [];
+      final tmpKeys = bundleId.keys.toList();
+      for (final tmpKey in tmpKeys) {
+        bundleIdSettings.add(DarwinBundleIDSettings(buildType: tmpKey, bundleId: bundleId[tmpKey]));
+      }
     } else if (bundleId is String) {
-      bundleID_debug = bundleId;
-      bundleID_profile = bundleId;
-      bundleID_release = bundleId;
+      bundleIdSettings = [
+        DarwinBundleIDSettings(buildType: keyBuildTypeDebug, bundleId: bundleId),
+        DarwinBundleIDSettings(buildType: keyBuildTypeProfile, bundleId: bundleId),
+        DarwinBundleIDSettings(buildType: keyBuildTypeRelease, bundleId: bundleId),
+      ];
     }
 
     // 更新 bundle id
-    await _updatePbxprojBundleId();
+    await _update_pbxproj_bundleId();
 
     log("iOS app name update completed. ✅");
   }
 
   // 更新 Info.plist 中的 `CFBundleName` 和 `CFBundleDisplayName`
-  void _updatePlistFileName() {
+  void _update_plistFileName() {
     try {
       final file = File('$currentDirPath/ios/Runner/Info.plist');
       if (!file.existsSync()) {
@@ -72,10 +81,13 @@ class FARPlatformIOS {
         return;
       }
       final content = file.readAsStringSync();
-      final updatedContent = _replacePlistFields(content, {
-        'CFBundleName': newAppName,
-        'CFBundleDisplayName': newAppShortName,
-      });
+      final updatedContent = DarwinUtil.replacePlistFields(
+        content,
+        {
+          'CFBundleName': bundleName,
+          'CFBundleDisplayName': bundleDisplayName,
+        },
+      );
 
       file.writeAsStringSync(updatedContent, flush: true);
     } catch (e) {
@@ -84,9 +96,9 @@ class FARPlatformIOS {
   }
 
   // 更新 bundle id
-  Future _updatePbxprojBundleId() async {
+  Future _update_pbxproj_bundleId() async {
     try {
-      String filePath = '$currentDirPath/ios/Runner.xcodeproj/project.pbxproj';
+      String filePath = '$currentDirPath/ios/$fileNameRunnerPbxproj';
       Pbxproj project = await Pbxproj.open(filePath);
       final object = project.find("objects") as MapPbx;
       final configList = object.find("XCConfigurationList") as SectionPbx;
@@ -108,72 +120,22 @@ class FARPlatformIOS {
       for (final mp in targetBuildConfigs) {
         _updateBundleIdForConfiguration(mp);
       }
-      await _writeUpdatedProjectFile(filePath, project);
+      await DarwinUtil.writeContentToProjectFile(filePath, project);
     } catch (e) {
       log("iOS update .pbxproj file fail, error: $e");
     }
   }
 
   void _updateBundleIdForConfiguration(MapPbx mp) {
-    final String? bundleID;
-    switch (mp.comment) {
-      case 'Debug':
-        bundleID = bundleID_debug;
-        break;
-      case 'Profile':
-        bundleID = bundleID_profile;
-        break;
-      case 'Release':
-        bundleID = bundleID_release;
-        break;
-      default:
-        return;
+    String buildTypeString = mp.comment?.toLowerCase() ?? "";
+    if (buildTypeString.isEmpty) {
+      return;
     }
-    final buildSettings = mp.find<MapPbx>("buildSettings")!;
-    final bundleIdEntry = buildSettings.find<MapEntryPbx>("PRODUCT_BUNDLE_IDENTIFIER")!;
-    final bundleValue = bundleIdEntry.value as VarPbx;
-    buildSettings.replaceOrAdd(
-      bundleIdEntry.copyWith(
-        value: bundleValue.copyWith(value: bundleID),
-      ),
-    );
-  }
-
-  Future<void> _writeUpdatedProjectFile(String filePath, Pbxproj project) async {
-    final file = File(filePath);
-    if (!await file.exists()) {
-      await file.create();
+    List<DarwinBundleIDSettings> settings = bundleIdSettings.where((element) => element.buildType == buildTypeString).toList();
+    if (settings.isEmpty) {
+      return;
     }
-
-    String removeMultipleUTF8String(String input) {
-      final utf8Pattern = RegExp(r'^\s*// !\$\*UTF8\*\$!');
-      int count = 0;
-      String output = input.split('\n').where((line) {
-        if (utf8Pattern.hasMatch(line)) {
-          return count++ == 0;
-        }
-        return true;
-      }).join('\n');
-      return output;
-    }
-
-    String projectString = project.formatOutput(project.toString());
-    projectString = removeMultipleUTF8String(projectString);
-    file.writeAsStringSync(projectString);
-  }
-
-  // 替换指定字段的值
-  String _replacePlistFields(String content, Map<String, String> replacements) {
-    var updatedContent = content;
-    replacements.forEach((key, value) {
-      final regex = RegExp('<key>$key</key>\\s*<string>.*?</string>');
-      if (regex.hasMatch(updatedContent)) {
-        updatedContent = updatedContent.replaceAllMapped(
-          regex,
-          (match) => '<key>$key</key>\n\t<string>$value</string>',
-        );
-      }
-    });
-    return updatedContent;
+    String bundleId = settings.first.bundleId;
+    DarwinUtil.updateBundleIdForConfiguration(mp, buildTypeString, bundleId);
   }
 }
