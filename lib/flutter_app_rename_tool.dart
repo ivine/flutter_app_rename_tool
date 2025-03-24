@@ -8,6 +8,7 @@ import 'util/log_util.dart';
 import 'platform/flutter.dart';
 import 'platform/ios.dart';
 import 'platform/android.dart';
+import 'platform/macos.dart';
 
 class FlutterAppRename {
   // 原文件
@@ -31,6 +32,7 @@ class FlutterAppRename {
     await FARPlatformFlutter().run(dirPath: current_dir_path, settings: settings!);
     await FARPlatformIOS().run(dirPath: current_dir_path, settings: settings!);
     await FARPlatformAndroid().run(dirPath: current_dir_path, settings: settings!);
+    await FARPlatformMacOS().run(dirPath: current_dir_path, settings: settings!);
 
     log("🚀 update completed. ✅");
   }
