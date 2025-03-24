@@ -21,14 +21,14 @@ class FARPlatformIOS {
   Future<void> run({required String dirPath, required YamlMap settings}) async {
     currentDirPath = dirPath;
     if (!settings.containsKey('ios')) {
-      log(text: "FARPlatformIOS: settings does not contain 'flutter' key.");
+      log("iOS settings does not contain 'flutter' key.");
       return;
     }
 
     final iosSettings = settings['ios'] as YamlMap;
     newAppName = iosSettings[keyAppName] ?? '';
     if (newAppName.isEmpty) {
-      log(text: "FARPlatformIOS: App name is empty.");
+      log("iOS app name is empty.");
       return;
     }
 
@@ -37,8 +37,7 @@ class FARPlatformIOS {
       newAppShortName = newAppName;
       if (newAppShortName.length > 15) {
         log(
-          text:
-              "app short name can contain up to 15 characters, https://developer.apple.com/documentation/bundleresources/information_property_list/cfbundlename#discussion",
+          "iOS app short name can contain up to 15 characters, https://developer.apple.com/documentation/bundleresources/information_property_list/cfbundlename#discussion",
         );
         newAppShortName = '';
       }
@@ -61,7 +60,7 @@ class FARPlatformIOS {
     // 更新 bundle id
     await _updatePbxprojBundleId();
 
-    log(text: "FARPlatformIOS: app name update completed. ✅");
+    log("iOS app name update completed. ✅");
   }
 
   // 更新 Info.plist 中的 `CFBundleName` 和 `CFBundleDisplayName`
@@ -69,7 +68,7 @@ class FARPlatformIOS {
     try {
       final file = File('$currentDirPath/ios/Runner/Info.plist');
       if (!file.existsSync()) {
-        log(text: "FARPlatformIOS: Info.plist does not exist at ${file.path}");
+        log("iOS info.plist does not exist at ${file.path}");
         return;
       }
       final content = file.readAsStringSync();
@@ -80,7 +79,7 @@ class FARPlatformIOS {
 
       file.writeAsStringSync(updatedContent, flush: true);
     } catch (e) {
-      log(text: "FARPlatformIOS: Error updating Info.plist - $e");
+      log("iOS error updating Info.plist - $e");
     }
   }
 
@@ -111,7 +110,7 @@ class FARPlatformIOS {
       }
       await _writeUpdatedProjectFile(filePath, project);
     } catch (e) {
-      log(text: "update .pbxproj file fail, error: $e");
+      log("iOS update .pbxproj file fail, error: $e");
     }
   }
 

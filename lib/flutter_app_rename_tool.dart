@@ -21,10 +21,10 @@ class FlutterAppRename {
     if (input_dir_path.isNotEmpty) {
       current_dir_path = input_dir_path;
     }
-    await setupConfigs();
+    await setup();
 
     if (settings == null) {
-      LogUtil.instance.addLog(text: "flutter_app_rename_tool settings is null");
+      log("settings is null");
       return;
     }
 
@@ -32,15 +32,15 @@ class FlutterAppRename {
     await FARPlatformIOS().run(dirPath: current_dir_path, settings: settings!);
     await FARPlatformAndroid().run(dirPath: current_dir_path, settings: settings!);
 
-    log(text: "flutter app rename: 🚀 update completed. ✅");
+    log("🚀 update completed. ✅");
   }
 
-  setupConfigs() async {
+  setup() async {
     String pubspecPath = '$current_dir_path/pubspec.yaml';
     pubspec_file_content = File(pubspecPath).readAsStringSync();
     final pubspecContent = loadYaml(pubspec_file_content);
     if (pubspecContent == null) {
-      LogUtil.instance.addLog(text: "setupConfigs, pubspec content is empty");
+      log("setup, pubspec content is empty");
       return;
     }
 
@@ -48,10 +48,10 @@ class FlutterAppRename {
       if (pubspecContent.containsKey('flutter_app_rename_tool')) {
         settings = pubspecContent['flutter_app_rename_tool'];
       } else {
-        LogUtil.instance.addLog(text: "setupConfigs, pubspec content is not YamlMap");
+        log("pubspec content is not YamlMap");
       }
     } else {
-      LogUtil.instance.addLog(text: "setupConfigs, pubspec content is not YamlMap");
+      log("pubspec content is not YamlMap");
     }
   }
 }

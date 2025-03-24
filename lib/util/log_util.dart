@@ -1,5 +1,5 @@
-log({required String text, bool record = true, bool newLine = false}) {
-  LogUtil.instance.addLog(text: text, record: record, newLine: newLine);
+log(String text, {bool record = true, bool newLine = false}) {
+  LogUtil.instance.addLog(text, record: record, newLine: newLine);
 }
 
 class LogUtil {
@@ -8,12 +8,12 @@ class LogUtil {
 
   List<String> logs = [];
 
-  addLog({required String text, bool record = true, bool newLine = false}) {
+  addLog(String text, {bool record = true, bool newLine = false}) {
     if (newLine) {
       print("\n");
       logs.add("-----------------------------------------------------------");
     }
-    String newText = "far_${DateTime.now().millisecondsSinceEpoch}: $text";
+    String newText = "flutter_app_rename_tool_${DateTime.now().millisecondsSinceEpoch}: $text";
     print(newText);
     if (record) {
       logs.add(newText);

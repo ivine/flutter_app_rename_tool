@@ -14,14 +14,14 @@ class FARPlatformFlutter {
   Future<void> run({required String dirPath, required YamlMap settings}) async {
     currentDirPath = dirPath;
     if (!settings.containsKey('flutter')) {
-      log(text: "FARPlatformFlutter: settings does not contain 'flutter' key.");
+      log("Flutter settings does not contain 'flutter' key.");
       return;
     }
 
     final flutterSettings = settings['flutter'] as YamlMap;
     final name = flutterSettings[keyAppName] ?? '';
     if (name.isEmpty) {
-      log(text: "FARPlatformFlutter: App name is empty.");
+      log("Flutter app name is empty.");
       return;
     }
 
@@ -29,7 +29,7 @@ class FARPlatformFlutter {
     final pubspecFile = File('$currentDirPath/$keyPubspecFileName');
     final originalName = await _getOriginalName(pubspecFile);
     if (originalName.isEmpty) {
-      log(text: "FARPlatformFlutter: Original name in pubspec.yaml is empty.");
+      log("Flutter original name in pubspec.yaml is empty.");
       return;
     }
 
@@ -47,12 +47,12 @@ class FARPlatformFlutter {
     // 更新 `pubspec.yaml` 中的名称
     await _updatePubspecName(pubspecFile, name);
 
-    log(text: "FARPlatformFlutter: App name update completed. ✅");
+    log("Flutter app name update completed. ✅");
   }
 
   Future<String> _getOriginalName(File pubspecFile) async {
     if (!pubspecFile.existsSync()) {
-      log(text: "FARPlatformFlutter: pubspec.yaml does not exist.");
+      log("Flutter pubspec.yaml does not exist.");
       return '';
     }
     final content = await pubspecFile.readAsString();
@@ -64,17 +64,17 @@ class FARPlatformFlutter {
     for (final dirPath in directories) {
       final directory = Directory(dirPath);
       if (!directory.existsSync()) {
-        log(text: "FARPlatformFlutter: Directory does not exist: $dirPath");
+        log("Flutter directory does not exist: $dirPath");
         continue;
       }
 
       final dartFiles = FileUtil.listFilesByExtensions(dirPath, ['dart']);
-      log(text: "Processing ${dartFiles.length} files in $dirPath...");
+      log("Flutter ${dartFiles.length} files in $dirPath...");
 
       for (final filePath in dartFiles) {
         final file = File(filePath);
         if (await _replaceInFile(file, patterns, originalName, newName)) {
-          log(text: "Updated: $filePath");
+          log("Flutter Updated: $filePath");
         }
       }
     }
@@ -102,7 +102,7 @@ class FARPlatformFlutter {
 
   Future<void> _updatePubspecName(File pubspecFile, String newName) async {
     if (!pubspecFile.existsSync()) {
-      log(text: "FARPlatformFlutter: pubspec.yaml does not exist.");
+      log("Flutter pubspec.yaml does not exist.");
       return;
     }
 

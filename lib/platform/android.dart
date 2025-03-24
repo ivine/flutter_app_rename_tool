@@ -15,7 +15,7 @@ class FARPlatformAndroid {
   Future<void> run({required String dirPath, required YamlMap settings}) async {
     currentDirPath = dirPath;
     if (!settings.containsKey('android')) {
-      log(text: "FARPlatformAndroid: settings does not contain 'flutter' key.");
+      log("Android settings does not contain 'android' key.");
       return;
     }
 
@@ -23,7 +23,7 @@ class FARPlatformAndroid {
     final newName = androidSettings[keyAppName] ?? '';
     final package = androidSettings['package'] ?? '';
     if (newName.isEmpty) {
-      log(text: "FARPlatformAndroid: App name is empty.");
+      log("Android app name is empty.");
       return;
     }
     // final stringsXmlFile = File(
@@ -39,35 +39,35 @@ class FARPlatformAndroid {
     try {
       final manifest = FARPlatformAndroidManifest(currentDirPath, newName, package);
       await manifest.update();
-      log(text: "FARPlatformAndroid: AndroidManifest.xml name updated!");
+      log("Android AndroidManifest.xml name updated!");
     } catch (e) {
-      log(text: "FARPlatformAndroid: Failed to update app_name, e: $e");
+      log("Android failed to update app_name, e: $e");
     }
 
     try {
       processBuildGradleBundleId(bundleId: package);
     } catch (e) {
-      log(text: "FARPlatformAndroid: Failed to update app/build.gradle bundleId, e: $e");
+      log("Android failed to update app/build.gradle bundleId, e: $e");
     }
 
     try {
       if (package is String && package.isNotEmpty) {
-        log(text: "FARPlatformAndroid: start process rename bundle id dir --- code dirs and files...");
+        log("Android start process rename bundle id dir --- code dirs and files...");
         await processAndroidCodeFileDirectory(currentDirPath: currentDirPath, newPackage: package);
-        log(text: "FARPlatformAndroid: process rename bundle id dir --- code dirs and files completed!");
+        log("Android process rename bundle id dir --- code dirs and files completed!");
       } else {
-        log(text: "FARPlatformAndroid: process rename bundle id dir --- no need to rename dir, new package name: $package");
+        log("Android process rename bundle id dir --- no need to rename dir, new package name: $package");
       }
     } catch (e) {
-      log(text: "FARPlatformAndroid: process rename bundle id dir --- error:$e");
+      log("Android process rename bundle id dir --- error:$e");
     }
-    log(text: "FARPlatformAndroid: app name update completed. ✅");
+    log("Android app name update completed. ✅");
   }
 
   void processBuildGradleBundleId({required String bundleId}) {
     final buildGradleFile = File("$currentDirPath/android/app/build.gradle");
     if (!buildGradleFile.existsSync()) {
-      print("build.gradle is not exist, path: ${buildGradleFile.path}");
+      log("Android build.gradle is not exist, path: ${buildGradleFile.path}");
       return;
     }
     final buildGradleString = buildGradleFile.readAsStringSync();
@@ -75,7 +75,7 @@ class FARPlatformAndroid {
         .replaceAll(RegExp('applicationId\\s*=?\\s*["\'].*?["\']'), 'applicationId "$bundleId"')
         .replaceAll(RegExp('namespace\\s*=?\\s*["\'].*?["\']'), 'namespace "$bundleId"');
     buildGradleFile.writeAsStringSync(newPackageIDBuildGradleString);
-    print('processBuildGradleAppName completed');
+    log('Android processBuildGradleAppName completed');
   }
 
   Future<void> processAndroidCodeFileDirectory({
@@ -83,7 +83,7 @@ class FARPlatformAndroid {
     required String newPackage,
   }) async {
     if (newPackage.isEmpty) {
-      print('processAndroidCodeFileDirectory, newPackage: $newPackage is empty');
+      log('Android processAndroidCodeFileDirectory, newPackage: $newPackage is empty');
       return;
     }
 
@@ -112,7 +112,7 @@ class FARPlatformAndroid {
     }
 
     if (mainActivityFilePath.isEmpty) {
-      print('not found MainActivity file path');
+      log('Android not found MainActivity file path');
       return;
     }
 
@@ -120,7 +120,7 @@ class FARPlatformAndroid {
         mainActivityFilePath.replaceAll('${androidDir.path}$language/', '').replaceAll('/$mainActivityFileName', '');
     String newPakcagePathString = newPackage.split('.').join('/');
     if (originalPackagePathString == newPakcagePathString) {
-      print('originalPackagePathString: $originalPackagePathString == newPakcagePathString: $newPakcagePathString');
+      log('Android originalPackagePathString: $originalPackagePathString == newPakcagePathString: $newPakcagePathString');
       return;
     }
 
@@ -153,7 +153,7 @@ class FARPlatformAndroid {
     if (needToDeleteDir.existsSync()) {
       needToDeleteDir.deleteSync();
     } else {
-      print('needToDeleteDir.path --> ${needToDeleteDir.path} is not exist');
+      log('Android needToDeleteDir.path --> ${needToDeleteDir.path} is not exist');
     }
   }
 
@@ -187,7 +187,7 @@ class FARPlatformAndroid {
         }
       }
     } catch (e) {
-      print('Error listing files in ${dir.path}: $e');
+      log('Android Error listing files in ${dir.path}: $e');
     }
     return filePaths;
   }
@@ -219,7 +219,7 @@ class FARPlatformAndroidManifest {
       doc = updateManifestAppName(doc);
       doc = updateManifestPackage(doc);
       file.writeAsStringSync(doc.toXmlString());
-      log(text: "FARPlatformAndroid: update ${file.path} completed");
+      log("Android update ${file.path} completed");
     }
   }
 
