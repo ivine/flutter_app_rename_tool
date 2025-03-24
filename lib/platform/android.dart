@@ -61,7 +61,7 @@ class FARPlatformAndroid {
     } catch (e) {
       log("Android process rename bundle id dir --- error:$e");
     }
-    log("Android app name update completed. ✅");
+    log("Android -> name update completed. ✅");
   }
 
   void processBuildGradleBundleId({required String bundleId}) {

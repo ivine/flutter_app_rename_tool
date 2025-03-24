@@ -6,8 +6,10 @@ const keyAndroidPackgeID = "package";
 const keyDarwinBundleName = "bundle_name";
 const keyDarwinBundleId = "bundle_id";
 
-const keyBuildTypeDebug = "Debug";
-const keyBuildTypeProfile = "Profile";
-const keyBuildTypeRelease = "Release";
+const keyBuildTypeDebug = "debug";
+const keyBuildTypeProfile = "profile";
+const keyBuildTypeRelease = "release";
+
+const keyCopyRight = "copyright";
 
 const fileNameRunnerPbxproj = "Runner.xcodeproj/project.pbxproj";

@@ -17,7 +17,7 @@ class DarwinUtil {
     try {
       final file = File('$dir/$platformName/Runner/Info.plist');
       if (!file.existsSync()) {
-        log("iOS info.plist does not exist at ${file.path}");
+        log("$platformName info.plist does not exist at ${file.path}");
         return;
       }
       final content = file.readAsStringSync();
@@ -31,7 +31,7 @@ class DarwinUtil {
 
       file.writeAsStringSync(updatedContent, flush: true);
     } catch (e) {
-      log("iOS error updating Info.plist - $e");
+      log("$platformName error updating Info.plist: $e");
     }
   }
 

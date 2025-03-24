@@ -13,7 +13,7 @@ class LogUtil {
       print("\n");
       logs.add("-----------------------------------------------------------");
     }
-    String newText = "flutter_app_rename_tool_${DateTime.now().millisecondsSinceEpoch}: $text";
+    String newText = "${DateTime.now().millisecondsSinceEpoch}, flutter_app_rename_tool: $text";
     print(newText);
     if (record) {
       logs.add(newText);

@@ -47,7 +47,7 @@ class FARPlatformFlutter {
     // 更新 `pubspec.yaml` 中的名称
     await _update_pubspecName(pubspecFile, name);
 
-    log("Flutter app name update completed. ✅");
+    log("Flutter -> name update completed. ✅");
   }
 
   Future<String> _getOriginalName(File pubspecFile) async {

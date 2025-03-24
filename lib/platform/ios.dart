@@ -17,34 +17,61 @@ class FARPlatformIOS {
   /// 运行 iOS 工程的替换任务
   Future<void> run({required String dirPath, required YamlMap settings}) async {
     currentDirPath = dirPath;
-    if (!settings.containsKey('ios')) {
-      log("iOS settings does not contain 'ios' key, skipping...");
+    final setup_suc = _setup(settings: settings);
+    if (!setup_suc) {
       return;
     }
 
-    final iosSettings = settings['ios'] as YamlMap;
-    bundleDisplayName = iosSettings[keyAppName] ?? '';
+    // 更新 Info.plist 中的 `CFBundleName` 和 `CFBundleDisplayName`
+    DarwinUtil.updatePlistFileName(
+      dir: currentDirPath,
+      platformName: platformName,
+      bundleName: bundleName,
+      bundleDisplayName: bundleDisplayName,
+    );
+
+    // 更新 bundle id
+    await DarwinUtil.updatePbxprojBundleId(
+      dir: currentDirPath,
+      platformName: platformName,
+      bundleIdSettings: bundleIdSettings,
+    );
+
+    log("$platformName -> name update completed. ✅");
+  }
+
+  // return true if success
+  bool _setup({required YamlMap settings}) {
+    if (!settings.containsKey(platformName)) {
+      log("$platformName settings does not contain '$platformName' key, skipping...");
+      return false;
+    }
+
+    // settings
+    final platformSettings = settings[platformName] as YamlMap;
+
+    // bundle display name
+    bundleDisplayName = platformSettings[keyAppName] ?? '';
     if (bundleDisplayName.isEmpty) {
-      log("iOS app name(CFBundleDisplayName) is empty.");
-      return;
+      log("$platformName app name(CFBundleDisplayName) is empty.");
+      return false;
     }
 
-    bundleName = iosSettings[keyDarwinBundleName] ?? '';
+    // bundle name
+    bundleName = platformSettings[keyDarwinBundleName] ?? '';
     if (bundleName.isEmpty) {
       bundleName = bundleDisplayName;
-      log(
-        "iOS app short name(CFBundleName) is empty",
-      );
+      log("$platformName app short name(CFBundleName) is empty, skipping...");
     }
     if (bundleName.length > 15) {
       log(
-        "iOS app short name(CFBundleName) can contain up to 15 characters, https://developer.apple.com/documentation/bundleresources/information_property_list/cfbundlename#discussion",
+        "$platformName app short name(CFBundleName) can contain up to 15 characters, https://developer.apple.com/documentation/bundleresources/information_property_list/cfbundlename#discussion",
       );
       bundleName = '';
     }
 
-    // get bundle id
-    dynamic bundleId = iosSettings[keyDarwinBundleId] ?? '';
+    // bundle id
+    dynamic bundleId = platformSettings[keyDarwinBundleId] ?? '';
     if (bundleId is YamlMap) {
       bundleIdSettings = [];
       final tmpKeys = bundleId.keys.toList();
@@ -58,22 +85,6 @@ class FARPlatformIOS {
         DarwinBundleIDSettings(buildType: keyBuildTypeRelease, bundleId: bundleId),
       ];
     }
-
-    // 更新 Info.plist 中的 `CFBundleName` 和 `CFBundleDisplayName`
-    DarwinUtil.updatePlistFileName(
-      dir: currentDirPath,
-      platformName: platformName,
-      bundleName: bundleName,
-      bundleDisplayName: bundleDisplayName,
-    );
-
-    // 更新 bundle id
-    DarwinUtil.updatePbxprojBundleId(
-      dir: currentDirPath,
-      platformName: platformName,
-      bundleIdSettings: bundleIdSettings,
-    );
-
-    log("iOS app name update completed. ✅");
+    return true;
   }
 }
