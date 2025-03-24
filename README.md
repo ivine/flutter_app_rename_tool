@@ -16,16 +16,16 @@ flutter_app_rename_tool:
 
   ios:
     app_name: FARAltmaniOS
-    bundle_name: FARiOS
+    bundle_name: FARIOS
     bundle_id:
       debug: com.example.debug.far_ios
       profile: com.example.profile.far_ios
       release: com.example.release.far_ios
 
   macos:
-    copyright: FARAltmanMacOS
+    copyright: Copyright © 2025 FAR Altman. All rights reserved.
     app_name: FARAltmanMacOS
-    bundle_name: FARiOS
+    bundle_name: FARMacOS
     bundle_id:
       debug: com.example.debug.far_macos
       profile: com.example.profile.far_macos
