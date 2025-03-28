@@ -1,54 +1,85 @@
-A sample command-line application with an entrypoint in `bin/`, library code
-in `lib/`, and example unit test in `test/`.
+# Flutter App Rename Tool (English Version)
 
-ios - app_name: CFBundleDisplayName
-ios - bundle_name: CFBundleName
+**Configuration File Structure**
 
+### Configuration Hierarchy
+```mermaid
+graph TD
+    A[flutter_app_rename_tool] --> B[Global Configuration]
+    A --> C[Flutter Project]
+    A --> D[Android]
+    A --> E[iOS]
+    A --> F[macOS]
 ```
 
+### Full Feature Configuration Template
+```yaml
+# ===== Basic Identifier =====
 flutter_app_rename_tool:
-  flutter:
-    app_name: far_altman_flutter
+  app_name: far_altman  # Tool instance ID (for logging purposes)
 
+  # ===== Cross-Platform Configuration =====
+  flutter:
+    app_name: far_altman_flutter  # ⚠️ Modifies the name field in pubspec.yaml
+
+  # ===== Platform-Specific Configuration =====
   android:
-    app_name: FARAltmanAndroid
-    package: com.example.android
+    app_name: "Far Altman"      # Display name on desktop icons
+    package: com.example.app.android  # Recommended to use reverse domain name format
 
   ios:
-    app_name: FARAltmaniOS
+    app_name: "Far Altman"
     bundle_name: FARIOS
     bundle_id:
-      debug: com.example.debug.far_ios
-      profile: com.example.profile.far_ios
-      release: com.example.release.far_ios
+      debug: com.example.app.debug.ios
+      release: com.example.app.prod.ios
 
   macos:
-    copyright: Copyright © 2025 FAR Altman. All rights reserved.
-    app_name: FARAltmanMacOS
-    bundle_name: FARMacOS
-    bundle_id:
-      debug: com.example.debug.far_macos
-      profile: com.example.profile.far_macos
-      release: com.example.release.far_macos
+    app_name: "Far Altman"
+    bundle_name: FARMac
+    copyright: Copyright © ${year} FAR Inc.  # Supports ${year} variable
+    bundle_id: com.example.app.macos
+```
 
-------
-
+### Minimal Configuration Template
+```yaml
 flutter_app_rename_tool:
-  flutter:
-    app_name: far_altman_flutter
-
   android:
-    app_name: FARAltmanAndroid
-    package: com.example.android
+    package: com.example.app.ios  # Only set essential parameters
   
   ios:
-    app_name: FARAltmaniOS
-    bundle_name: FARiOS
-    bundle_id: com.example.far_ios
+    bundle_id: com.example.app.ios
 
   macos:
-    copyright: FARAltmanMacOS
-    app_name: FARAltmanMacOS
-    bundle_name: FARMacOS
-    bundle_id: com.example.far_macos
+    bundle_id: com.example.app.macos
+    copyright: Copyright © 2025 MyCompany  # Required field for macOS
+```
+
+---
+
+## Configuration Field Details
+
+### 📌 General Rules
+- **Optional Fields**: If not configured, the original project values are retained.
+- **Variable Support**: `${year}` is automatically replaced with the current year.
+- **Multi-Environment Support**: Supports `debug`/`profile`/`release` segmentation.
+
+### Quick Reference Table
+
+| Platform | Key Field           | Example Value                | Requirement | Impact Scope            |
+|----------|---------------------|------------------------------|-------------|-------------------------|
+| All      | flutter.app_name    | my_app_flutter               | Optional   | Flutter project identifier |
+| Android  | package             | com.company.app.android      | Recommended | Critical for app store listing |
+| iOS      | bundle_id           | com.company.app.ios          | Recommended | Required for TestFlight distribution |
+| macOS    | copyright           | Copyright © 2025 Company   | Recommended | Required for app signature validation |
+
+---
+
+## ⚠️ Key Considerations
+
+### 1. Naming Conventions
+```diff
++ Correct: com.company.app (Android)
++ Correct: com.company.app (iOS)
+- Incorrect: My_App (Contains illegal character _)
 ```
