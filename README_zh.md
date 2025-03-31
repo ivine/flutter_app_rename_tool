@@ -20,14 +20,17 @@ flutter_app_rename_tool:
 
   # ===== 跨平台配置 =====
   flutter:
-    app_name: far_altman_flutter  # ⚠️ 修改pubspec.yaml中的name字段
+    enable: false # 可选
+    app_name: far_altman_flutter   # 可选, ⚠️ 修改pubspec.yaml中的name字段
 
   # ===== 平台专属配置 =====
   android:
-    app_name: "Far Altman"      # 桌面图标显示名称
+    enable: true # 可选
+    app_name: "Far Altman"      # 可选, 桌面图标显示名称
     package: com.example.app.android  # 建议使用反向域名
 
   ios:
+    enable: true # 可选
     app_name: "Far Altman"
     bundle_name: FARIOS
     bundle_id:
@@ -35,6 +38,7 @@ flutter_app_rename_tool:
       release: com.example.app.prod.ios
 
   macos:
+    enable: false # 可选
     app_name: "Far Altman"
     bundle_name: FARMac
     copyright: Copyright © ${year} FAR Inc.  # 支持${year}变量

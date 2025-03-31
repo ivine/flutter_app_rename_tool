@@ -49,6 +49,9 @@ class FARPlatformIOS {
 
     // settings
     final platformSettings = settings[platformName] as YamlMap;
+    if (platformSettings['enable'] == false) {
+      return false;
+    }
 
     // bundle display name
     bundleDisplayName = platformSettings[keyAppName] ?? '';

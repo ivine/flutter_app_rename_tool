@@ -20,6 +20,9 @@ class FARPlatformAndroid {
     }
 
     final androidSettings = settings['android'] as YamlMap;
+    if (androidSettings['enable'] == false) {
+      return;
+    }
     final newName = androidSettings[keyAppName] ?? '';
     final package = androidSettings[keyAndroidPackgeID] ?? '';
     if (newName.isEmpty) {

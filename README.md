@@ -20,14 +20,17 @@ flutter_app_rename_tool:
 
   # ===== Cross-Platform Configuration =====
   flutter:
-    app_name: far_altman_flutter  # ⚠️ Modifies the name field in pubspec.yaml
+    enable: false # Optional
+    app_name: far_altman_flutter  # Optional, ⚠️ Modifies the name field in pubspec.yaml
 
   # ===== Platform-Specific Configuration =====
   android:
+    enable: true # Optional
     app_name: "Far Altman"      # Display name on desktop icons
     package: com.example.app.android  # Recommended to use reverse domain name format
 
   ios:
+    enable: true # Optional
     app_name: "Far Altman"
     bundle_name: FARIOS
     bundle_id:
@@ -35,6 +38,7 @@ flutter_app_rename_tool:
       release: com.example.app.prod.ios
 
   macos:
+    enable: false # Optional
     app_name: "Far Altman"
     bundle_name: FARMac
     copyright: Copyright © ${year} FAR Inc.  # Supports ${year} variable

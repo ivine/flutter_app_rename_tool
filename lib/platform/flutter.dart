@@ -19,6 +19,9 @@ class FARPlatformFlutter {
     }
 
     final flutterSettings = settings['flutter'] as YamlMap;
+    if (flutterSettings['enable'] == false) {
+      return;
+    }
     final name = flutterSettings[keyAppName] ?? '';
     if (name.isEmpty) {
       log("Flutter app name is empty.");

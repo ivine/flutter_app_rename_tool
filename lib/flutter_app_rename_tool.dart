@@ -50,7 +50,7 @@ class FlutterAppRename {
       if (pubspecContent.containsKey('flutter_app_rename_tool')) {
         settings = pubspecContent['flutter_app_rename_tool'];
       } else {
-        log("pubspec content is not YamlMap");
+        log("pubspec content is not contain flutter_app_rename_tool");
       }
     } else {
       log("pubspec content is not YamlMap");
