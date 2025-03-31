@@ -59,24 +59,19 @@ class DarwinUtil {
     try {
       String filePath = '$dir/$platformName/$fileNameRunnerPbxproj';
       Pbxproj project = await Pbxproj.open(filePath);
-      final configList = project.find("XCConfigurationList") as SectionPbx;
-      final buildConfig = project.find("XCBuildConfiguration") as SectionPbx;
-      final nativeTarget = configList.childrenList
-          .where((element) {
-            String tmpComment = element.comment ?? "";
-            return tmpComment.contains("PBXNativeTarget") && tmpComment.contains("\"Runner\"");
-          })
-          .toList()
-          .first;
-      final buildConfigurations = (nativeTarget as MapPbx).find("buildConfigurations") as dynamic;
-      List<String> uuids = [];
-      for (var i = 0; i < (buildConfigurations as ListPbx).length; i++) {
-        final e = buildConfigurations[i] as ElementOfListPbx;
-        uuids.add(e.value);
+
+      List<String> buildConfigurationUuids = getProjectBuildConfigurationUuids(project);
+      List<dynamic> buildConfigurations = [];
+      for (String tmpUuid in buildConfigurationUuids) {
+        for (var element in project.childrenList) {
+          buildConfigurations.addAll(findTargetBuildConfiguration(element, tmpUuid));
+        }
       }
-      final targetBuildConfigs = buildConfig.childrenList.where((e) => uuids.contains(e.uuid)).whereType<MapPbx>().toList();
-      for (final mp in targetBuildConfigs) {
-        String buildTypeString = mp.comment?.toLowerCase() ?? "";
+      for (var bc in buildConfigurations) {
+        if (bc is! MapPbx) {
+          continue;
+        }
+        String buildTypeString = bc.comment?.toLowerCase() ?? "";
         if (buildTypeString.isEmpty) {
           return;
         }
@@ -85,7 +80,7 @@ class DarwinUtil {
           return;
         }
         String bundleId = settings.first.bundleId;
-        _updateBundleIdForConfiguration(mp, buildTypeString, bundleId);
+        _updateBundleIdForConfiguration(bc, buildTypeString, bundleId);
       }
       await _writeContentToProjectFile(filePath, project);
     } catch (e) {
@@ -95,17 +90,84 @@ class DarwinUtil {
 
   // type: Debug/Profile/Release...
   static void _updateBundleIdForConfiguration(MapPbx mp, String buildType, String bundleId) {
-    if (mp.comment != buildType) {
+    String mpBid = mp.comment ?? "";
+    if (mpBid.toLowerCase() != buildType.toLowerCase()) {
       return;
     }
-    final buildSettings = mp.find<MapPbx>("buildSettings")!;
-    final bundleIdEntry = buildSettings.find<MapEntryPbx>("PRODUCT_BUNDLE_IDENTIFIER")!;
-    final bundleValue = bundleIdEntry.value as VarPbx;
+    final buildSettings = mp.find<MapPbx>("buildSettings");
+    if (buildSettings == null) {
+      return;
+    }
+    String keyUUID = "PRODUCT_BUNDLE_IDENTIFIER";
+    final newEntryPbx = MapEntryPbx(keyUUID, VarPbx(bundleId));
     buildSettings.replaceOrAdd(
-      bundleIdEntry.copyWith(
-        value: bundleValue.copyWith(value: bundleId),
-      ),
+      newEntryPbx,
     );
+  }
+
+  static List<String> getProjectBuildConfigurationUuids(Pbxproj project) {
+    List<dynamic> configList = [];
+    for (var element in project.childrenList) {
+      configList.addAll(findXCConfigurationList(element));
+    }
+
+    List<String> results = [];
+    for (var element in configList) {
+      if (element is! MapPbx) {
+        continue;
+      }
+
+      try {
+        final buildConfigurations = element.childrenMap['buildConfigurations'];
+        if (buildConfigurations is ListPbx) {
+          for (int i = 0; i < buildConfigurations.length; i++) {
+            final entry = buildConfigurations[i];
+            if (entry is ElementOfListPbx) {
+              final value = entry.value;
+              results.add(value);
+            }
+          }
+        }
+      } catch (_) {}
+    }
+    return results;
+  }
+
+  static dynamic findXCConfigurationList(dynamic element) {
+    List<dynamic> results = [];
+    try {
+      if (element is CommentPbx || element is MapEntryPbx) {
+        return results;
+      }
+      for (var v in element.childrenList) {
+        if (v.comment == "Build configuration list for PBXNativeTarget \"Runner\"") {
+          results.add(v);
+        }
+        if (v.childrenList.isNotEmpty) {
+          results.addAll(findXCConfigurationList(v));
+        }
+      }
+    } catch (e) {
+      // Handle the case where childrenList is not available
+    }
+    return results;
+  }
+
+  static dynamic findTargetBuildConfiguration(dynamic element, String uuid) {
+    List<dynamic> results = [];
+    try {
+      for (var v in element.childrenList) {
+        if (v.uuid == uuid) {
+          results.add(v);
+        }
+        if (v.childrenList.isNotEmpty) {
+          results.addAll(findTargetBuildConfiguration(v, uuid));
+        }
+      }
+    } catch (e) {
+      // Handle the case where childrenList is not available
+    }
+    return results;
   }
 
   static Future<void> _writeContentToProjectFile(String filePath, Pbxproj project) async {
