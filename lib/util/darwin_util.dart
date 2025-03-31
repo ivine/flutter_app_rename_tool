@@ -101,6 +101,9 @@ class DarwinUtil {
     if (buildSettings == null) {
       return;
     }
+    if (bundleId.isEmpty) {
+      return;
+    }
     String keyUUID = "PRODUCT_BUNDLE_IDENTIFIER";
     final newEntryPbx = MapEntryPbx(keyUUID, VarPbx(bundleId));
     buildSettings.replaceOrAdd(
