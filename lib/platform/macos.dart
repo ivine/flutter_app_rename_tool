@@ -32,11 +32,11 @@ class FARPlatformMacOS {
     );
 
     // 更新 bundle id
-    await DarwinUtil.updatePbxprojBundleId(
-      dir: currentDirPath,
-      platformName: platformName,
-      bundleIdSettings: bundleIdSettings,
-    );
+    // await DarwinUtil.updatePbxprojBundleId(
+    //   dir: currentDirPath,
+    //   platformName: platformName,
+    //   bundleIdSettings: bundleIdSettings,
+    // );
 
     // 更新 Configs/AppInfo.xcconfig
     String product_bundle_id = bundleIdSettings.isNotEmpty ? bundleIdSettings.first.bundleId : "";

@@ -50,12 +50,15 @@ class DarwinUtil {
     return updatedContent;
   }
 
-  // platformName: ios or macos
+  // platformName: ios
   static Future updatePbxprojBundleId({
     required String dir,
     required String platformName,
     required List<DarwinBundleIDSettings> bundleIdSettings,
   }) async {
+    if (platformName.toLowerCase() == 'macos') {
+      return;
+    }
     try {
       String filePath = '$dir/$platformName/$fileNameRunnerPbxproj';
       Pbxproj project = await Pbxproj.open(filePath);
