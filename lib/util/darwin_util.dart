@@ -58,6 +58,10 @@ class DarwinUtil {
     required String targetName,
     required List<DarwinBundleIDSettings> bundleIdSettings,
   }) async {
+    if (platform != FARPlatform.ios.name) {
+      // 暂时只支持 ios
+      return;
+    }
     try {
       String filePath = '$dir/$platform/$fileNameRunnerPbxproj';
       Pbxproj project = await Pbxproj.open(filePath);
@@ -103,8 +107,8 @@ class DarwinUtil {
     if (bundleId.isEmpty) {
       return;
     }
-    String keyUUID = "PRODUCT_BUNDLE_IDENTIFIER";
-    final newEntryPbx = MapEntryPbx(keyUUID, VarPbx(bundleId));
+    String keyBundleId = "PRODUCT_BUNDLE_IDENTIFIER";
+    final newEntryPbx = MapEntryPbx(keyBundleId, VarPbx(bundleId));
     buildSettings.replaceOrAdd(
       newEntryPbx,
     );

@@ -102,6 +102,7 @@ flutter_app_rename_tool:
     package: com.far.android
   ios:
     - app_name: FARAltmanIOS
+      enable: false
       target_name: Runner
       bundle_name: FARIOS
       # bundle_id: com.example.example
@@ -110,6 +111,7 @@ flutter_app_rename_tool:
         profile: com.example.profile.far_ios
         release: com.example.release.far_ios
     - app_name: FARAltmanIOS
+      enable: false
       target_name: RunnerTests
       bundle_name: FARIOS
       # bundle_id: com.example.example.RunnerTests
@@ -118,11 +120,14 @@ flutter_app_rename_tool:
         profile: com.example.RunnerTests.profile.far_ios
         release: com.example.RunnerTests.release.far_ios
   macos:
-    enable: false
-    copyright: Copyright © 2025 FAR Altman. All rights reserved.
-    app_name: FARAltmanMacOS
-    bundle_name: FARMacoS
-    bundle_ids:
-      debug: com.example.debug.far_macos
-      profile: com.example.profile.far_macos
-      release: com.example.release.far_macos
+    - app_name: FARAltmanMacOS
+      target_name: Runner
+      copyright: Copyright © 2025 FAR Altman. All rights reserved.
+      bundle_name: FARMacOS
+      bundle_id: com.example.release.far_macos
+
+    - app_name: FARMacOSRTests
+      target_name: RunnerTests
+      copyright: Copyright © 2025 FAR Altman RunnerTests. All rights reserved.
+      bundle_name: FARMacOSRTests
+      bundle_id: com.example.RunnerTests.debug.far_macos

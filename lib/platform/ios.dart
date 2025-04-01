@@ -34,27 +34,26 @@ class FARPlatformIOS {
     }
 
     renamePlist();
-
     await renamePbxproj();
 
-    log("$platform -> name update completed. ✅");
+    log("$platform $targetName, name update completed. ✅");
   }
 
   void renamePlist() {
     // bundle display name
     if (bundleDisplayName.isEmpty) {
-      logSkipping("$platform app name(CFBundleDisplayName) is empty.");
+      logSkipping("$platform $targetName, app name(CFBundleDisplayName) is empty.");
     }
 
     // bundle name
     String tmpBundleName = bundleName;
     if (bundleName.isEmpty) {
-      logSkipping("$platform app short name(CFBundleName) is empty");
+      logSkipping("$platform $targetName, app short name(CFBundleName) is empty");
     }
     if (bundleName.length > 15) {
       tmpBundleName = "";
       log(
-        "$platform app short name(CFBundleName) can contain up to 15 characters, https://developer.apple.com/documentation/bundleresources/information_property_list/cfbundlename#discussion",
+        "$platform $targetName, app short name(CFBundleName) can contain up to 15 characters, https://developer.apple.com/documentation/bundleresources/information_property_list/cfbundlename#discussion",
       );
     }
 
@@ -70,6 +69,15 @@ class FARPlatformIOS {
 
   Future<void> renamePbxproj() async {
     // bundle id
+    await DarwinUtil.updatePbxprojBundleId(
+      dir: currentDirPath,
+      platform: platform.name,
+      targetName: targetName,
+      bundleIdSettings: getBundleIDSettings(),
+    );
+  }
+
+  List<DarwinBundleIDSettings> getBundleIDSettings() {
     List<DarwinBundleIDSettings> bundleIdSettings = [
       DarwinBundleIDSettings(buildType: kBuildTypeDebug, bundleId: ""),
       DarwinBundleIDSettings(buildType: kBuildTypeProfile, bundleId: ""),
@@ -90,11 +98,6 @@ class FARPlatformIOS {
 
     bundleIdSettings = bundleIdSettings.where((element) => element.bundleId != "").toList();
     bundleIdSettings = bundleIdSettings.toSet().toList();
-    await DarwinUtil.updatePbxprojBundleId(
-      dir: currentDirPath,
-      platform: platform.name,
-      targetName: targetName,
-      bundleIdSettings: bundleIdSettings,
-    );
+    return bundleIdSettings;
   }
 }

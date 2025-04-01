@@ -49,7 +49,9 @@ class FlutterAppRename {
     for (var config in getPlatformConfigs(FARPlatform.ios)) {
       await FARPlatformIOS().run(dirPath: current_dir_path, farConfig: config);
     }
-    await FARPlatformMacOS().run(dirPath: current_dir_path, settings: settings!);
+    for (var config in getPlatformConfigs(FARPlatform.macos)) {
+      await FARPlatformMacOS().run(dirPath: current_dir_path, farConfig: config);
+    }
     await FARPlatformAndroid().run(dirPath: current_dir_path, settings: settings!);
     log("🚀 flutter app rename completed. ✅");
   }
