@@ -101,13 +101,22 @@ flutter_app_rename_tool:
     app_name: FARAltmanAndroid
     package: com.far.android
   ios:
-    app_name: FARAltmanIOS
-    bundle_name: FARIOS
-    bundle_id: com.example.example
-    # bundle_ids:
-    #   debug: com.example.debug.far_ios
-    #   profile: com.example.profile.far_ios
-    #   release: com.example.release.far_ios
+    - app_name: FARAltmanIOS
+      target_name: Runner
+      bundle_name: FARIOS
+      # bundle_id: com.example.example
+      bundle_ids:
+        debug: com.example.debug.far_ios
+        profile: com.example.profile.far_ios
+        release: com.example.release.far_ios
+    - app_name: FARAltmanIOS
+      target_name: RunnerTests
+      bundle_name: FARIOS
+      # bundle_id: com.example.example.RunnerTests
+      bundle_ids:
+        debug: com.example.RunnerTests.debug.far_ios
+        profile: com.example.RunnerTests.profile.far_ios
+        release: com.example.RunnerTests.release.far_ios
   macos:
     enable: false
     copyright: Copyright © 2025 FAR Altman. All rights reserved.

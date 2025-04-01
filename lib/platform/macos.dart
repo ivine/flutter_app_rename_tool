@@ -11,6 +11,7 @@ class FARPlatformMacOS {
   String platformName = 'macos';
   String bundleDisplayName = '';
   String bundleName = '';
+  String targetName = 'Runner';
   List<DarwinBundleIDSettings> bundleIdSettings = [];
   String copyright = '';
 
@@ -27,6 +28,7 @@ class FARPlatformMacOS {
     DarwinUtil.updatePlistName(
       dir: currentDirPath,
       platformName: platformName,
+      targetName: targetName,
       bundleName: bundleName,
       bundleDisplayName: bundleDisplayName,
     );

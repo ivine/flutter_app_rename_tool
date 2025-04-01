@@ -11,13 +11,14 @@ class DarwinUtil {
   static void updatePlistName({
     required String dir,
     required String platformName,
+    required String targetName,
     required String bundleName,
     required String bundleDisplayName,
   }) {
     try {
-      final file = File('$dir/$platformName/Runner/Info.plist');
+      final file = File('$dir/$platformName/$targetName/Info.plist');
       if (!file.existsSync()) {
-        log("$platformName info.plist does not exist at ${file.path}");
+        logSkipping("$platformName - $targetName info.plist does not exist at ${file.path}");
         return;
       }
       final content = file.readAsStringSync();
