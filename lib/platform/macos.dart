@@ -24,7 +24,7 @@ class FARPlatformMacOS {
     }
 
     // 更新 Info.plist 中的 `CFBundleName` 和 `CFBundleDisplayName`
-    DarwinUtil.updatePlistFileName(
+    DarwinUtil.updatePlistName(
       dir: currentDirPath,
       platformName: platformName,
       bundleName: bundleName,
@@ -40,7 +40,7 @@ class FARPlatformMacOS {
 
     // 更新 Configs/AppInfo.xcconfig
     String product_bundle_id = bundleIdSettings.isNotEmpty ? bundleIdSettings.first.bundleId : "";
-    final filterList = bundleIdSettings.where((element) => element.buildType == keyBuildTypeRelease).toList();
+    final filterList = bundleIdSettings.where((element) => element.buildType == kBuildTypeRelease).toList();
     if (filterList.isNotEmpty) {
       product_bundle_id = filterList.first.bundleId;
     }
@@ -95,9 +95,9 @@ class FARPlatformMacOS {
       }
     } else if (bundleId is String) {
       bundleIdSettings = [
-        DarwinBundleIDSettings(buildType: keyBuildTypeDebug, bundleId: bundleId),
-        DarwinBundleIDSettings(buildType: keyBuildTypeProfile, bundleId: bundleId),
-        DarwinBundleIDSettings(buildType: keyBuildTypeRelease, bundleId: bundleId),
+        DarwinBundleIDSettings(buildType: kBuildTypeDebug, bundleId: bundleId),
+        DarwinBundleIDSettings(buildType: kBuildTypeProfile, bundleId: bundleId),
+        DarwinBundleIDSettings(buildType: kBuildTypeRelease, bundleId: bundleId),
       ];
     }
 

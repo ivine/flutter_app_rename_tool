@@ -8,7 +8,7 @@ import 'log_util.dart';
 
 class DarwinUtil {
   // 更新 Info.plist 中的 `CFBundleName` 和 `CFBundleDisplayName`
-  static void updatePlistFileName({
+  static void updatePlistName({
     required String dir,
     required String platformName,
     required String bundleName,
@@ -53,17 +53,15 @@ class DarwinUtil {
   // platformName: ios
   static Future updatePbxprojBundleId({
     required String dir,
-    required String platformName,
+    required String platform,
+    required String targetName,
     required List<DarwinBundleIDSettings> bundleIdSettings,
   }) async {
-    if (platformName.toLowerCase() == 'macos') {
-      return;
-    }
     try {
-      String filePath = '$dir/$platformName/$fileNameRunnerPbxproj';
+      String filePath = '$dir/$platform/$fileNameRunnerPbxproj';
       Pbxproj project = await Pbxproj.open(filePath);
 
-      List<String> buildConfigurationUuids = getProjectBuildConfigurationUuids(project);
+      List<String> buildConfigurationUuids = getProjectBuildConfigurationUuids(project, targetName);
       List<dynamic> buildConfigurations = [];
       for (String tmpUuid in buildConfigurationUuids) {
         for (var element in project.childrenList) {
@@ -87,7 +85,7 @@ class DarwinUtil {
       }
       await _writeContentToProjectFile(filePath, project);
     } catch (e) {
-      log("$platformName update .pbxproj file fail, error: $e");
+      log("$platform update .pbxproj file fail, error: $e");
     }
   }
 
@@ -111,10 +109,10 @@ class DarwinUtil {
     );
   }
 
-  static List<String> getProjectBuildConfigurationUuids(Pbxproj project) {
+  static List<String> getProjectBuildConfigurationUuids(Pbxproj project, String targetName) {
     List<dynamic> configList = [];
     for (var element in project.childrenList) {
-      configList.addAll(findXCConfigurationList(element));
+      configList.addAll(findXCConfigurationList(element, targetName));
     }
 
     List<String> results = [];
@@ -139,18 +137,18 @@ class DarwinUtil {
     return results;
   }
 
-  static dynamic findXCConfigurationList(dynamic element) {
+  static dynamic findXCConfigurationList(dynamic element, String targetName) {
     List<dynamic> results = [];
     try {
       if (element is CommentPbx || element is MapEntryPbx) {
         return results;
       }
       for (var v in element.childrenList) {
-        if (v.comment == "Build configuration list for PBXNativeTarget \"Runner\"") {
+        if (v.comment == "Build configuration list for PBXNativeTarget \"$targetName\"") {
           results.add(v);
         }
         if (v.childrenList.isNotEmpty) {
-          results.addAll(findXCConfigurationList(v));
+          results.addAll(findXCConfigurationList(v, targetName));
         }
       }
     } catch (e) {
