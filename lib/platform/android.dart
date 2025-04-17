@@ -1,30 +1,27 @@
 import 'dart:io';
 
 import 'package:xml/xml.dart';
-import 'package:yaml/yaml.dart';
 import 'package:path/path.dart' as p;
 
 import '../const/const.dart';
+import '../const/model.dart';
 import '../util/file_util.dart';
 import '../util/log_util.dart';
 
 class FARPlatformAndroid {
+  final platform = FARPlatform.android;
   late String currentDirPath;
 
   /// 运行 Android 工程的替换任务
-  Future<void> run({required String dirPath, required YamlMap settings}) async {
+  Future<void> run({required String dirPath, required FarConfig farConfig}) async {
     currentDirPath = dirPath;
-    if (!settings.containsKey('android')) {
-      log("Android settings does not contain 'android' key, skipping...");
+    if (farConfig.enable == false) {
+      logSkipping("$platform settings enable is false");
       return;
     }
 
-    final androidSettings = settings['android'] as YamlMap;
-    if (androidSettings['enable'] == false) {
-      return;
-    }
-    final newName = androidSettings[keyAppName] ?? '';
-    final package = androidSettings[keyAndroidPackgeID] ?? '';
+    final newName = farConfig.appName ?? '';
+    final package = farConfig.package ?? '';
     if (newName.isEmpty) {
       log("Android app name is empty.");
       return;
@@ -54,7 +51,7 @@ class FARPlatformAndroid {
     }
 
     try {
-      if (package is String && package.isNotEmpty) {
+      if (package.isNotEmpty) {
         log("Android start process rename bundle id dir --- code dirs and files...");
         await processAndroidCodeFileDirectory(currentDirPath: currentDirPath, newPackage: package);
         log("Android process rename bundle id dir --- code dirs and files completed!");

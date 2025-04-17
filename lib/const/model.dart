@@ -6,8 +6,9 @@ class FarConfig {
   String? appName;
   String? bundleName;
   String? bundleId;
-  String? copyright;
   Map<String, dynamic>? bundleIds;
+  String? copyright;
+  String? package;
 
   FarConfig({
     this.enable,
@@ -17,6 +18,7 @@ class FarConfig {
     this.bundleId,
     this.bundleIds,
     this.copyright,
+    this.package,
   });
 
   factory FarConfig.fromRawJson(String str) => FarConfig.fromJson(json.decode(str));
@@ -31,6 +33,7 @@ class FarConfig {
         bundleId: json["bundle_id"],
         bundleIds: json["bundle_ids"],
         copyright: json["copyright"],
+        package: json["package"],
       );
 
   Map<String, dynamic> toJson() => {
@@ -41,5 +44,6 @@ class FarConfig {
         "bundle_id": bundleId,
         "bundle_ids": bundleIds,
         "copyright": copyright,
+        "package": package,
       };
 }
