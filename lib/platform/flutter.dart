@@ -5,24 +5,22 @@ import 'package:yaml/yaml.dart';
 import 'package:yaml_edit/yaml_edit.dart';
 
 import '../const/const.dart';
+import '../const/model.dart';
 import '../util/log_util.dart';
 import '../util/file_util.dart';
 
 class FARPlatformFlutter {
+  final platform = FARPlatform.flutter;
   late String currentDirPath;
 
-  Future<void> run({required String dirPath, required YamlMap settings}) async {
+  Future<void> run({required String dirPath, required FarConfig farConfig}) async {
     currentDirPath = dirPath;
-    if (!settings.containsKey('flutter')) {
-      log("Flutter settings does not contain 'flutter' key, skipping...");
+    if (farConfig.enable == false) {
+      logSkipping("$platform settings enable is false");
       return;
     }
 
-    final flutterSettings = settings['flutter'] as YamlMap;
-    if (flutterSettings['enable'] == false) {
-      return;
-    }
-    final name = flutterSettings[keyAppName] ?? '';
+    final name = farConfig.appName ?? '';
     if (name.isEmpty) {
       log("Flutter app name is empty.");
       return;

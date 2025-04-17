@@ -45,7 +45,10 @@ class FlutterAppRename {
       return;
     }
 
-    await FARPlatformFlutter().run(dirPath: current_dir_path, settings: settings!);
+    for (var config in getPlatformConfigs(FARPlatform.flutter)) {
+      await FARPlatformFlutter().run(dirPath: current_dir_path, farConfig: config);
+    }
+
     for (var config in getPlatformConfigs(FARPlatform.ios)) {
       await FARPlatformIOS().run(dirPath: current_dir_path, farConfig: config);
     }
@@ -64,13 +67,13 @@ class FlutterAppRename {
     if (!settings!.containsKey(platform.name)) {
       return configs;
     }
-    final iosSettings = settings![platform.name];
-    if (iosSettings is YamlMap) {
-      final c = FarConfig.fromRawJson(jsonEncode(iosSettings));
+    final platformSettings = settings![platform.name];
+    if (platformSettings is YamlMap) {
+      final c = FarConfig.fromRawJson(jsonEncode(platformSettings));
       replaceRootAppNameIfNeeded(c);
       configs.add(c);
-    } else if (iosSettings is YamlList) {
-      for (var element in iosSettings) {
+    } else if (platformSettings is YamlList) {
+      for (var element in platformSettings) {
         final c = FarConfig.fromRawJson(jsonEncode(element));
         replaceRootAppNameIfNeeded(c);
         configs.add(c);
